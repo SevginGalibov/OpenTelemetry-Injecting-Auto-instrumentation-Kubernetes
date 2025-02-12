@@ -215,6 +215,8 @@ kubectl exec -it sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s -- curl "http://loc
 ## 🎉 Visualizing Traces
 Check out the traces and metrics collected in Grafana:
 ![Grafana Dashboard](https://i.imgur.com/DND8a2g.png)
+![Grafana Dashboard](https://i.imgur.com/6pmOvGT.png)
+
 
 ## 📜 License
 This project is licensed under the MIT License.
