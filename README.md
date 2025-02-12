@@ -23,46 +23,172 @@ kubectl cluster-info --context kind-kind
 ### 2️⃣ Install Cert-Manager
 ```sh
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.7.1/cert-manager.yaml
+```
+```sh
 kubectl get pods -n cert-manager
+```
+**Expected Output:**
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-7bbdf4ddc7-vsnhk              1/1     Running   0          20s
+cert-manager-cainjector-68d96bb946-qbp9p   1/1     Running   0          20s
+cert-manager-webhook-57647647b5-4vvpj      1/1     Running   0          20s
 ```
 
 ### 3️⃣ Install OpenTelemetry Operator
 ```sh
 helm install opentelemetry-operator open-telemetry/opentelemetry-operator \
 --set "manager.collectorImage.repository=otel/opentelemetry-collector-k8s"
+```
+```sh
 kubectl get pods -n default
+
+```
+**Expected Output:**
+```sh
+NAME                                      READY   STATUS    RESTARTS   AGE
+opentelemetry-operator-58dd4c7487-npkb8   2/2     Running   0          100s
 ```
 
 ### 4️⃣ Deploy Prometheus
 ```sh
 kubectl apply -f prometheus.yaml -n default
+```
+```sh
 kubectl get pods -n default
+```
+**Expected Output:**
+```
+NAME                                      READY   STATUS    RESTARTS   AGE
+opentelemetry-operator-58dd4c7487-npkb8   2/2     Running   0          3m11s
+prometheus-64c78655f5-k7l6c               1/1     Running   0          53s
 ```
 
 ### 5️⃣ Deploy OpenTelemetry Collector
 ```sh
 kubectl apply -f collector.yaml -n default
+```
+```sh
 kubectl get pods -n default
+```
+**Expected Output:**
+```
+NAME                                      READY   STATUS    RESTARTS   AGE
+opentelemetry-operator-58dd4c7487-npkb8   2/2     Running   0          4m29s
+prometheus-64c78655f5-k7l6c               1/1     Running   0          2m11s
+simplest-collector-675f995c9b-227l8       1/1     Running   0          31s
 ```
 
 ### 6️⃣ Deploy Auto-Instrumentation
 ```sh
 kubectl apply -f instrumentation.yaml -n default
+```
+```sh
 kubectl get Instrumentation -n default
+```
+**Expected Output:**
+```
+NAME                            AGE   ENDPOINT                                                   SAMPLER   SAMPLER ARG
+sevgingalibov-instrumentation   15s   http://simplest-collector.default.svc.cluster.local:4318
 ```
 
 ### 7️⃣ Deploy Sample Applications (Java & .NET)
 ```sh
 kubectl apply -f sevgingalibov-java-sample.yaml -n default
 kubectl apply -f sevgingalibov-dotnet-sample.yaml -n default
+```
+```sh
 kubectl get pods -n default
 ```
-**Note:** Auto-instrumentation is activated during the **Init** phase.
+**Expected Output:**
+```
+NAME                                            READY   STATUS     RESTARTS   AGE
+opentelemetry-operator-58dd4c7487-npkb8         2/2     Running    0          7m5s
+prometheus-64c78655f5-k7l6c                     1/1     Running    0          4m47s
+sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s     0/1     Init:0/1   0          12s         # Injection activated
+sevgingalibov-sample-java                       0/1     Init:0/1   0          13s         # Injection activated
+simplest-collector-675f995c9b-227l8             1/1     Running    0          3m7s
+```
+### Java Pod Describe
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sevgingalibov-sample-java
+spec:
+  containers:
+  - name: sevgingalibov-sample-java
+    env:
+    - name: OTEL_NODE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+    - name: OTEL_POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://simplest-collector.default.svc.cluster.local:4317
+    - name: JAVA_TOOL_OPTIONS
+      value: "-javaagent:/otel-auto-instrumentation-java/javaagent.jar"
+    - name: OTEL_EXPORTER_OTLP_HEADERS
+      value: Authorization=Basic x
+    - name: OTEL_SERVICE_NAME
+      value: sevgingalibov-sample-java
+```
+
+### .NET Pod Describe
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sevgingalibov-sample-dotnet
+spec:
+  containers:
+  - name: sevgingalibov-sample-dotnet
+    env:
+    - name: OTEL_NODE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+    - name: OTEL_POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://simplest-collector.default.svc.cluster.local:4318
+    - name: CORECLR_ENABLE_PROFILING
+      value: "1"
+    - name: CORECLR_PROFILER
+      value: "{918728DD-259F-4A6A-AC2B-B85E1B658318}"
+    - name: CORECLR_PROFILER_PATH
+      value: /otel-auto-instrumentation-dotnet/linux-x64/OpenTelemetry.AutoInstrumentation.Native.so
+    - name: DOTNET_STARTUP_HOOKS
+      value: /otel-auto-instrumentation-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll
+    - name: DOTNET_ADDITIONAL_DEPS
+      value: /otel-auto-instrumentation-dotnet/AdditionalDeps
+    - name: OTEL_DOTNET_AUTO_HOME
+      value: /otel-auto-instrumentation-dotnet
+    - name: DOTNET_SHARED_STORE
+      value: /otel-auto-instrumentation-dotnet/store
+```
 
 ### 8️⃣ Install Grafana
 ```sh
 kubectl apply -f grafana.yaml -n default
+```
+```sh
 kubectl get pods -n default
+
+```
+**Expected Output:**
+```
+grafana-6475cb6779-4v25z                      1/1     Running             0          33s
+opentelemetry-operator-58dd4c7487-npkb8       2/2     Running             0          17m
+prometheus-64c78655f5-k7l6c                   1/1     Running             0          15m
+sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s   1/1     Running             0          8m53s
+sevgingalibov-sample-java                     1/1     Running             0          10m
+simplest-collector-675f995c9b-227l8           1/1     Running             0          13m
 ```
 
 ### 9️⃣ Generate a Trace
