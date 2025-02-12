@@ -111,66 +111,42 @@ simplest-collector-675f995c9b-227l8             1/1     Running    0          3m
 ```
 ### Java Pod Describe
 ```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: sevgingalibov-sample-java
-spec:
-  containers:
-  - name: sevgingalibov-sample-java
-    env:
-    - name: OTEL_NODE_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.hostIP
-    - name: OTEL_POD_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
-    - name: OTEL_EXPORTER_OTLP_ENDPOINT
-      value: http://simplest-collector.default.svc.cluster.local:4317
-    - name: JAVA_TOOL_OPTIONS
-      value: "-javaagent:/otel-auto-instrumentation-java/javaagent.jar"
-    - name: OTEL_EXPORTER_OTLP_HEADERS
-      value: Authorization=Basic x
-    - name: OTEL_SERVICE_NAME
-      value: sevgingalibov-sample-java
+    Environment:
+      OTEL_NODE_IP:                         (v1:status.hostIP)
+      OTEL_POD_IP:                          (v1:status.podIP)
+      OTEL_EXPORTER_OTLP_ENDPOINT:         http://simplest-collector.default.svc.cluster.local:4317
+      JAVA_TOOL_OPTIONS:                    -javaagent:/otel-auto-instrumentation-java/javaagent.jar
+      OTEL_EXPORTER_OTLP_HEADERS:          Authorization=Basic x
+      OTEL_SERVICE_NAME:                   sevgingalibov-sample-java
+      OTEL_RESOURCE_ATTRIBUTES_POD_NAME:   sevgingalibov-sample-java (v1:metadata.name)
+      OTEL_RESOURCE_ATTRIBUTES_NODE_NAME:   (v1:spec.nodeName)
+      OTEL_RESOURCE_ATTRIBUTES:            k8s.container.name=sevgingalibov-sample-java,k8s.namespace.name=default,k8s.node.name=$(OTEL_RESOURCE_ATTRIBUTES_NODE_NAME),k8s.pod.name=$(OTEL_RESOURCE_ATTRIBUTES_POD_NAME),service.instance.id=default.$(OTEL_RESOURCE_ATTRIBUTES_POD_NAME).sevgingalibov-sample-java,service.version=main
+    Mounts:
+      /otel-auto-instrumentation-java from opentelemetry-auto-instrumentation-java (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-b496g (ro)
 ```
 
 ### .NET Pod Describe
 ```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: sevgingalibov-sample-dotnet
-spec:
-  containers:
-  - name: sevgingalibov-sample-dotnet
-    env:
-    - name: OTEL_NODE_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.hostIP
-    - name: OTEL_POD_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
-    - name: OTEL_EXPORTER_OTLP_ENDPOINT
-      value: http://simplest-collector.default.svc.cluster.local:4318
-    - name: CORECLR_ENABLE_PROFILING
-      value: "1"
-    - name: CORECLR_PROFILER
-      value: "{918728DD-259F-4A6A-AC2B-B85E1B658318}"
-    - name: CORECLR_PROFILER_PATH
-      value: /otel-auto-instrumentation-dotnet/linux-x64/OpenTelemetry.AutoInstrumentation.Native.so
-    - name: DOTNET_STARTUP_HOOKS
-      value: /otel-auto-instrumentation-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll
-    - name: DOTNET_ADDITIONAL_DEPS
-      value: /otel-auto-instrumentation-dotnet/AdditionalDeps
-    - name: OTEL_DOTNET_AUTO_HOME
-      value: /otel-auto-instrumentation-dotnet
-    - name: DOTNET_SHARED_STORE
-      value: /otel-auto-instrumentation-dotnet/store
+    Environment:
+      OTEL_NODE_IP:                         (v1:status.hostIP)
+      OTEL_POD_IP:                          (v1:status.podIP)
+      OTEL_EXPORTER_OTLP_ENDPOINT:         http://simplest-collector.default.svc.cluster.local:4318
+      CORECLR_ENABLE_PROFILING:            1
+      CORECLR_PROFILER:                    {918728DD-259F-4A6A-AC2B-B85E1B658318}
+      CORECLR_PROFILER_PATH:               /otel-auto-instrumentation-dotnet/linux-x64/OpenTelemetry.AutoInstrumentation.Native.so
+      DOTNET_STARTUP_HOOKS:                /otel-auto-instrumentation-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll
+      DOTNET_ADDITIONAL_DEPS:              /otel-auto-instrumentation-dotnet/AdditionalDeps
+      OTEL_DOTNET_AUTO_HOME:               /otel-auto-instrumentation-dotnet
+      DOTNET_SHARED_STORE:                 /otel-auto-instrumentation-dotnet/store
+      OTEL_EXPORTER_OTLP_HEADERS:          Authorization=Basic x
+      OTEL_SERVICE_NAME:                   sevgingalibov-sample-dotnet
+      OTEL_RESOURCE_ATTRIBUTES_POD_NAME:   sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s (v1:metadata.name)
+      OTEL_RESOURCE_ATTRIBUTES_NODE_NAME:   (v1:spec.nodeName)
+      OTEL_RESOURCE_ATTRIBUTES:            k8s.container.name=sevgingalibov-sample-dotnet,k8s.deployment.name=sevgingalibov-sample-dotnet,k8s.namespace.name=default,k8s.node.name=$(OTEL_RESOURCE_ATTRIBUTES_NODE_NAME),k8s.pod.name=$(OTEL_RESOURCE_ATTRIBUTES_POD_NAME),k8s.replicaset.name=sevgingalibov-sample-dotnet-b7dfb56b6,service.instance.id=default.$(OTEL_RESOURCE_ATTRIBUTES_POD_NAME).sevgingalibov-sample-dotnet,service.version=development-r15
+    Mounts:
+      /otel-auto-instrumentation-dotnet from opentelemetry-auto-instrumentation-dotnet (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-cj8mv (ro)
 ```
 
 ### 8️⃣ Install Grafana
