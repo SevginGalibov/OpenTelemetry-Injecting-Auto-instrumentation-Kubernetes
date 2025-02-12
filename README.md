@@ -15,10 +15,6 @@ Ensure you have the following tools installed on your system:
 ```sh
 kind create cluster --config kind-ingress-config.yaml
 ```
-Verify the cluster is created:
-```sh
-kubectl cluster-info --context kind-kind
-```
 
 ### 2️⃣ Install Cert-Manager
 ```sh
