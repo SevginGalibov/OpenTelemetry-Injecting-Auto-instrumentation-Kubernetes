@@ -1,0 +1,32 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: simplest	#https://github.com/SevginGalibov/
+spec:
+  image: otel/opentelemetry-collector-contrib:0.103.0
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    connectors:
+      spanmetrics:
+        dimensions:
+          - name: http.method
+          - name: http.status_code
+          - name: http.route
+    exporters:
+      prometheusremotewrite:
+        endpoint: "http://prometheus.default.svc.cluster.local:9090/api/v1/write"	#Prometheus Server
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [spanmetrics]
+        metrics:
+          receivers: [spanmetrics]
+          exporters: [prometheusremotewrite] 

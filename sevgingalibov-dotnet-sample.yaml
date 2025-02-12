@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sevgingalibov-sample-dotnet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sevgingalibov-sample-dotnet
+  template:
+    metadata:
+      labels:
+        app: sevgingalibov-sample-dotnet
+      annotations:
+        instrumentation.opentelemetry.io/inject-dotnet: "true"		# This annotation must be added.
+    spec:
+      containers:
+      - name: sevgingalibov-sample-dotnet
+        image: 								# Dotnet docker image
+        ports:
+        - containerPort: 8080

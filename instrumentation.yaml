@@ -1,0 +1,27 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: sevgingalibov-instrumentation
+spec:
+  exporter:
+    endpoint: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  env:
+    - name: OTEL_EXPORTER_OTLP_HEADERS
+      value: 'Authorization=Basic x'
+
+  python:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  dotnet:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  java:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
+  nodejs:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
