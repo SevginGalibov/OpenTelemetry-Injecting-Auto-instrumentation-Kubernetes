@@ -1,5 +1,7 @@
 # OpenTelemetry Auto-Instrumentation on Kubernetes
 
+![Application architecture collecting telemetry](https://media.licdn.com/dms/image/v2/D4D12AQHjP5mRSN-oYw/article-inline_image-shrink_1500_2232/article-inline_image-shrink_1500_2232/0/1719942922311?e=1744848000&v=beta&t=99h5A6CpHpbSOPqSvae9schxVjiEcciWaTrcenuqfLk)
+
 ## 📌 Overview
 This project demonstrates how to set up OpenTelemetry auto-instrumentation in a Kubernetes cluster using **Kind**, **OpenTelemetry Operator**, **Prometheus**, and **Grafana**.
 
