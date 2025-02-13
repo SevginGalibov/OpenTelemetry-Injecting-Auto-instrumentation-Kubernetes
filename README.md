@@ -63,9 +63,44 @@ prometheus-64c78655f5-k7l6c               1/1     Running   0          53s
 ```
 
 ### 5️⃣ Deploy OpenTelemetry Collector
-```sh
+```
 kubectl apply -f collector.yaml -n default
 ```
+```yaml
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: simplest        #https://github.com/SevginGalibov/
+spec:
+  image: otel/opentelemetry-collector-contrib:0.103.0
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    connectors:
+      spanmetrics:
+        dimensions:
+          - name: http.method
+          - name: http.status_code
+          - name: http.route
+    exporters:
+      prometheusremotewrite:
+        endpoint: "http://prometheus.default.svc.cluster.local:9090/api/v1/write"       # Prometheus Server
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [spanmetrics]
+        metrics:
+          receivers: [spanmetrics]
+          exporters: [prometheusremotewrite]
+```
+
 ```sh
 kubectl get pods -n default
 ```
@@ -81,6 +116,35 @@ simplest-collector-675f995c9b-227l8       1/1     Running   0          31s
 ```sh
 kubectl apply -f instrumentation.yaml -n default
 ```
+```yaml
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: sevgingalibov-instrumentation
+spec:
+  exporter:
+    endpoint: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  env:
+    - name: OTEL_EXPORTER_OTLP_HEADERS
+      value: 'Authorization=Basic x'
+
+  python:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  dotnet:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+  java:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
+  nodejs:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
+```
 ```sh
 kubectl get Instrumentation -n default
 ```
@@ -93,7 +157,20 @@ sevgingalibov-instrumentation   15s   http://simplest-collector.default.svc.clus
 ### 7️⃣ Deploy Sample Applications (Java & .NET)
 ```sh
 kubectl apply -f sevgingalibov-java-sample.yaml -n default
+
+```
+```yaml
+For Java injection to work, the relevant annotation must be added to the yaml.
+annotations:
+    instrumentation.opentelemetry.io/inject-java: "true"       
+```
+```sh
 kubectl apply -f sevgingalibov-dotnet-sample.yaml -n default
+```
+```yaml
+For .NET injection to work, the relevant annotation must be added to the yaml.
+annotations:
+    instrumentation.opentelemetry.io/inject-dotnet: "true"          
 ```
 ```sh
 kubectl get pods -n default
@@ -107,7 +184,7 @@ sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s     0/1     Init:0/1   0          12
 sevgingalibov-sample-java                       0/1     Init:0/1   0          13s   # Injection activated
 simplest-collector-675f995c9b-227l8             1/1     Running    0          3m7s
 ```
-### Java Pod Describe
+### Let's see the environments injected into the Java pod
 ```yaml
     Environment:
       OTEL_NODE_IP:                         (v1:status.hostIP)
@@ -124,7 +201,7 @@ simplest-collector-675f995c9b-227l8             1/1     Running    0          3m
       /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-b496g (ro)
 ```
 
-### .NET Pod Describe
+### Let's see the environments injected into the .NET pod
 ```yaml
     Environment:
       OTEL_NODE_IP:                         (v1:status.hostIP)
