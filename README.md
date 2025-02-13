@@ -125,7 +125,7 @@ metadata:
   name: sevgingalibov-instrumentation
 spec:
   exporter:
-    endpoint: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+    endpoint: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server
   env:
     - name: OTEL_EXPORTER_OTLP_HEADERS
       value: 'Authorization=Basic x'
@@ -133,19 +133,19 @@ spec:
   python:
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server
   dotnet:
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server and OTLP
+        value: http://simplest-collector.default.svc.cluster.local:4318		# Collector Server
   java:
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server
   nodejs:
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server and OTLP
+        value: http://simplest-collector.default.svc.cluster.local:4317		# Collector Server
 ```
 ```sh
 kubectl get Instrumentation -n default
