@@ -103,8 +103,8 @@ kubectl get pods -n default
 NAME                                            READY   STATUS     RESTARTS   AGE
 opentelemetry-operator-58dd4c7487-npkb8         2/2     Running    0          7m5s
 prometheus-64c78655f5-k7l6c                     1/1     Running    0          4m47s
-sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s     0/1     Init:0/1   0          12s         # Injection activated
-sevgingalibov-sample-java                       0/1     Init:0/1   0          13s         # Injection activated
+sevgingalibov-sample-dotnet-b7dfb56b6-f2n4s     0/1     Init:0/1   0          12s   # Injection activated
+sevgingalibov-sample-java                       0/1     Init:0/1   0          13s   # Injection activated
 simplest-collector-675f995c9b-227l8             1/1     Running    0          3m7s
 ```
 ### Java Pod Describe
