@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: sevgingalibov-sample-java
   annotations:
-    instrumentation.opentelemetry.io/inject-java: "true"
+    instrumentation.opentelemetry.io/inject-java: "true"	# This annotation must be added.
 spec:
   containers:
   - name: sevgingalibov-sample-java
