@@ -49,6 +49,14 @@ instrumentation:
 
 ---
 
+helm repo add auto-namespace-intrumentation-injector https://sevgingalibov.github.io/auto-namespace-intrumentation-injector
+helm repo update
+
+
+helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
+ --version 0.0.1
+
+
 ## 🛡️ License
 
 MIT © 2025 Sevgin Galipoglu
