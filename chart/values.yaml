@@ -1,0 +1,14 @@
+image:
+  repository: ghcr.io/sevgingalibov/auto-namespace-intrumentation
+  tag: 0.0.1
+
+collector:
+  endpoint: http://simplest-collector.default.svc.cluster.local:4318
+
+otelHeader: Authorization=Basic x
+
+ignoreNamespaces:
+  - kube-system
+  - kube-public
+  - kube-node-lease
+  - default

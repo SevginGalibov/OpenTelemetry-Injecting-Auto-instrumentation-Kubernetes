@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto-namespace-intrumentation-injector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auto-namespace-intrumentation-injector
+  template:
+    metadata:
+      labels:
+        app: auto-namespace-intrumentation-injector
+    spec:
+      serviceAccountName: auto-namespace-intrumentation-injector
+      containers:
+        - name: watcher
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: COLLECTOR_ENDPOINT
+              value: "{{ .Values.collector.endpoint }}"
+            - name: OTEL_EXPORTER_OTLP_HEADERS
+              value: "{{ .Values.otelHeader }}"
+            - name: IGNORE_NAMESPACES
+              value: "{{ join "," .Values.ignoreNamespaces }}"
