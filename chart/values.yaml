@@ -12,3 +12,4 @@ ignoreNamespaces:
   - kube-public
   - kube-node-lease
   - default
+  - sevgin
