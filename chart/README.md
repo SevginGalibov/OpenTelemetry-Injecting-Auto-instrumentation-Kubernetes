@@ -23,12 +23,6 @@ helm repo add auto-namespace-intrumentation-injector https://sevgingalibov.githu
 helm repo update
 ```
 
-### 2. Install the chart
-
-```bash
-helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
- --version 0.0.1
-```
 
 ---
 
@@ -47,6 +41,14 @@ instrumentation:
   exporterEndpoint: http://simplest-collector.default.svc.cluster.local:4318
   authHeader: 'Authorization=Basic x'
 ```
+
+### 2. Install the chart
+
+```bash
+helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
+ --version 0.0.1
+```
+
 
 ---
 
