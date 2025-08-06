@@ -19,14 +19,15 @@ This Helm chart deploys a controller on Kubernetes. Its main purpose is to **aut
 ### 1. Add the Helm repository _(hosted via GitHub Pages)_
 
 ```bash
-helm repo add namespace-injector https://sevgingalibov.github.io/auto-namespace-instrumentation
+helm repo add auto-namespace-intrumentation-injector https://sevgingalibov.github.io/auto-namespace-intrumentation-injector
 helm repo update
 ```
 
 ### 2. Install the chart
 
 ```bash
-helm install injector namespace-injector/auto-namespace-instrumentation-injector --version 0.0.1
+helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
+ --version 0.0.1
 ```
 
 ---
@@ -48,14 +49,6 @@ instrumentation:
 ```
 
 ---
-
-helm repo add auto-namespace-intrumentation-injector https://sevgingalibov.github.io/auto-namespace-intrumentation-injector
-helm repo update
-
-
-helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
- --version 0.0.1
-
 
 ## 🛡️ License
 
