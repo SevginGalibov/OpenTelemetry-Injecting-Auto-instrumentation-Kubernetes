@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/sevgingalibov/auto-namespace-intrumentation
-  tag: 0.0.1
+  tag: 0.0.3
 
 collector:
   endpoint: http://simplest-collector.default.svc.cluster.local:4318
@@ -13,3 +13,21 @@ ignoreNamespaces:
   - kube-node-lease
   - default
   - sevgin
+
+extraEnv:
+  - name: OTEL_TRACES_SAMPLER
+    value: always_off
+  - name: OTEL_TRACES_SAMPLER_ARG
+    value: "1.0"
+  - name: OTEL_DOTNET_AUTO_TRACES_ENABLED_INSTRUMENTATIONS
+    value: AspNetCore,HttpClient,GrpcClient,SqlClient
+#  - name: OTEL_EXPORTER_OTLP_PROTOCOL
+#    value: grpc
+#  - name: OTEL_LOGS_EXPORTER
+#    value: otlp
+#  - name: OTEL_DOTNET_AUTO_LOGS_ENABLED_INSTRUMENTATIONS
+#    value: AspNetCore
+#  - name: OTEL_METRICS_EXPORTER
+#    value: otlp
+#  - name: OTEL_DOTNET_AUTO_METRICS_ENABLED_INSTRUMENTATIONS
+#    value: AspNetCore,HttpClient

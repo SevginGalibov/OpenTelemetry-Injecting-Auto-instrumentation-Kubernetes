@@ -23,3 +23,10 @@ spec:
               value: "{{ .Values.otelHeader }}"
             - name: IGNORE_NAMESPACES
               value: "{{ join "," .Values.ignoreNamespaces }}"
+            {{- if .Values.extraEnv }}
+            {{- range .Values.extraEnv }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
+            {{- end }}
+

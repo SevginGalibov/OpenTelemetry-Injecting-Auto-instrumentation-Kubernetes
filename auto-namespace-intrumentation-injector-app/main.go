@@ -19,9 +19,11 @@ import (
 
 type NamespaceReconciler struct {
 	client.Client
-	IgnoreList map[string]bool
-	Collector  string
-	AuthHeader string
+	IgnoreList    map[string]bool
+	Collector     string
+	AuthHeader    string
+	SamplerType   string
+	SamplerArg    string
 }
 
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -61,35 +63,56 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				"exporter": map[string]interface{}{
 					"endpoint": r.Collector,
 				},
+				"propagators": []interface{}{"tracecontext", "baggage"},
+				"sampler": map[string]interface{}{
+					"type":     r.SamplerType,
+					"argument": r.SamplerArg,
+				},
 				"env": []interface{}{
 					map[string]interface{}{
 						"name":  "OTEL_EXPORTER_OTLP_HEADERS",
 						"value": r.AuthHeader,
 					},
+					map[string]interface{}{
+						"name":  "OTEL_TRACES_SAMPLER",
+						"value": r.SamplerType,
+					},
 				},
 				"python": map[string]interface{}{
-					"env": []interface{}{map[string]interface{}{
-						"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-						"value": r.Collector,
-					}},
+					"env": []interface{}{
+						map[string]interface{}{
+							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+							"value": r.Collector,
+						},
+					},
 				},
 				"dotnet": map[string]interface{}{
-					"env": []interface{}{map[string]interface{}{
-						"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-						"value": r.Collector,
-					}},
+					"env": []interface{}{
+						map[string]interface{}{
+							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+							"value": r.Collector,
+						},
+						map[string]interface{}{
+							"name":  "OTEL_DOTNET_AUTO_TRACES_ENABLED_INSTRUMENTATIONS",
+							"value": "AspNetCore,HttpClient,GrpcClient,SqlClient",
+						},
+					},
 				},
 				"java": map[string]interface{}{
-					"env": []interface{}{map[string]interface{}{
-						"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-						"value": r.Collector,
-					}},
+					"env": []interface{}{
+						map[string]interface{}{
+							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+							"value": r.Collector,
+						},
+					},
 				},
 				"nodejs": map[string]interface{}{
-					"env": []interface{}{map[string]interface{}{
-						"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-						"value": r.Collector,
-					}},
+					"env": []interface{}{
+						map[string]interface{}{
+							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+							"value": r.Collector,
+						},
+					},
 				},
 			},
 		},
@@ -123,6 +146,16 @@ func main() {
 		authHeader = "Authorization=Basic x"
 	}
 
+	samplerType := os.Getenv("OTEL_TRACES_SAMPLER")
+	if samplerType == "" {
+		samplerType = "parentbased_traceidratio"
+	}
+
+	samplerArg := os.Getenv("OTEL_TRACES_SAMPLER_ARG")
+	if samplerArg == "" {
+		samplerArg = "1.0"
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
 		panic(fmt.Sprintf("unable to start manager: %v", err))
@@ -133,6 +166,8 @@ func main() {
 		IgnoreList: ignoreMap,
 		Collector:  collector,
 		AuthHeader: authHeader,
+		SamplerType: samplerType,
+		SamplerArg:  samplerArg,
 	}
 
 	ctrl.NewControllerManagedBy(mgr).
