@@ -46,7 +46,7 @@ instrumentation:
 
 ```bash
 helm install injector auto-namespace-intrumentation-injector/auto-namespace-intrumentation-injector \
- --version 0.0.3
+ --version 0.0.6
 ```
 
 
