@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -19,11 +20,15 @@ import (
 
 type NamespaceReconciler struct {
 	client.Client
-	IgnoreList    map[string]bool
-	Collector     string
-	AuthHeader    string
-	SamplerType   string
-	SamplerArg    string
+	IgnoreList   map[string]bool
+	Collector    string
+	AuthHeader   string
+	SamplerType  string
+	SamplerArg   string
+	Propagators  []interface{}
+	ExtraDotnet  []map[string]interface{}
+	ExtraJava    []map[string]interface{}
+	ExtraNodejs  []map[string]interface{}
 }
 
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -51,6 +56,47 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, nil
 	}
 
+	// .NET env (default + extra)
+	dotnetEnv := []interface{}{
+		map[string]interface{}{
+			"name":  "OTEL_TRACES_SAMPLER",
+			"value": "always_on",
+		},
+		map[string]interface{}{
+			"name":  "OTEL_DOTNET_AUTO_TRACES_ENABLED_INSTRUMENTATIONS",
+			"value": "AspNetCore,HttpClient,GrpcClient,SqlClient",
+		},
+		map[string]interface{}{
+			"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+			"value": r.Collector,
+		},
+	}
+	for _, e := range r.ExtraDotnet {
+		dotnetEnv = append(dotnetEnv, e)
+	}
+
+	// Java env (default + extra)
+	javaEnv := []interface{}{
+		map[string]interface{}{
+			"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+			"value": r.Collector,
+		},
+	}
+	for _, e := range r.ExtraJava {
+		javaEnv = append(javaEnv, e)
+	}
+
+	// Node.js env (default + extra)
+	nodeEnv := []interface{}{
+		map[string]interface{}{
+			"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
+			"value": r.Collector,
+		},
+	}
+	for _, e := range r.ExtraNodejs {
+		nodeEnv = append(nodeEnv, e)
+	}
+
 	instObj := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "opentelemetry.io/v1alpha1",
@@ -63,7 +109,7 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				"exporter": map[string]interface{}{
 					"endpoint": r.Collector,
 				},
-				"propagators": []interface{}{"tracecontext", "baggage"},
+				"propagators": r.Propagators,
 				"sampler": map[string]interface{}{
 					"type":     r.SamplerType,
 					"argument": r.SamplerArg,
@@ -87,32 +133,13 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 					},
 				},
 				"dotnet": map[string]interface{}{
-					"env": []interface{}{
-						map[string]interface{}{
-							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-							"value": r.Collector,
-						},
-						map[string]interface{}{
-							"name":  "OTEL_DOTNET_AUTO_TRACES_ENABLED_INSTRUMENTATIONS",
-							"value": "AspNetCore,HttpClient,GrpcClient,SqlClient",
-						},
-					},
+					"env": dotnetEnv,
 				},
 				"java": map[string]interface{}{
-					"env": []interface{}{
-						map[string]interface{}{
-							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-							"value": r.Collector,
-						},
-					},
+					"env": javaEnv,
 				},
 				"nodejs": map[string]interface{}{
-					"env": []interface{}{
-						map[string]interface{}{
-							"name":  "OTEL_EXPORTER_OTLP_ENDPOINT",
-							"value": r.Collector,
-						},
-					},
+					"env": nodeEnv,
 				},
 			},
 		},
@@ -133,7 +160,9 @@ func main() {
 	ignoreList := strings.Split(os.Getenv("IGNORE_NAMESPACES"), ",")
 	ignoreMap := make(map[string]bool)
 	for _, ns := range ignoreList {
-		ignoreMap[strings.TrimSpace(ns)] = true
+		if strings.TrimSpace(ns) != "" {
+			ignoreMap[strings.TrimSpace(ns)] = true
+		}
 	}
 
 	collector := os.Getenv("COLLECTOR_ENDPOINT")
@@ -146,6 +175,19 @@ func main() {
 		authHeader = "Authorization=Basic x"
 	}
 
+	// Propagators env’den oku
+	propagatorsEnv := os.Getenv("OTEL_PROPAGATORS")
+	var propagatorsList []interface{}
+	if propagatorsEnv == "" {
+		propagatorsList = []interface{}{"tracecontext", "baggage"} // default
+	} else {
+		for _, p := range strings.Split(propagatorsEnv, ",") {
+			if strings.TrimSpace(p) != "" {
+				propagatorsList = append(propagatorsList, strings.TrimSpace(p))
+			}
+		}
+	}
+
 	samplerType := os.Getenv("OTEL_TRACES_SAMPLER")
 	if samplerType == "" {
 		samplerType = "parentbased_traceidratio"
@@ -156,18 +198,36 @@ func main() {
 		samplerArg = "1.0"
 	}
 
+	// Extra env parse
+	parseExtraEnv := func(envName string) []map[string]interface{} {
+		raw := os.Getenv(envName)
+		var parsed []map[string]interface{}
+		if raw != "" {
+			_ = json.Unmarshal([]byte(raw), &parsed)
+		}
+		return parsed
+	}
+
+	extraDotnet := parseExtraEnv("DOTNET_EXTRA_ENV")
+	extraJava := parseExtraEnv("JAVA_EXTRA_ENV")
+	extraNodejs := parseExtraEnv("NODEJS_EXTRA_ENV")
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{})
 	if err != nil {
 		panic(fmt.Sprintf("unable to start manager: %v", err))
 	}
 
 	reconciler := &NamespaceReconciler{
-		Client:     mgr.GetClient(),
-		IgnoreList: ignoreMap,
-		Collector:  collector,
-		AuthHeader: authHeader,
+		Client:      mgr.GetClient(),
+		IgnoreList:  ignoreMap,
+		Collector:   collector,
+		AuthHeader:  authHeader,
 		SamplerType: samplerType,
 		SamplerArg:  samplerArg,
+		Propagators: propagatorsList,
+		ExtraDotnet: extraDotnet,
+		ExtraJava:   extraJava,
+		ExtraNodejs: extraNodejs,
 	}
 
 	ctrl.NewControllerManagedBy(mgr).

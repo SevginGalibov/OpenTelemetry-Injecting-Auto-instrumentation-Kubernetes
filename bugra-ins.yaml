@@ -1,0 +1,37 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: global-instrumentation
+  namespace: app-prod
+spec:
+  exporter:
+    endpoint: "http://10.20.48.98:4317"
+#    endpoint: http://bugra-collector-collector.otel-test-bugra.svc.cluster.local:4317
+  dotnet:
+    env:
+      - name: OTEL_TRACES_SAMPLER
+        value: always_on
+      - name: OTEL_DOTNET_AUTO_TRACES_ENABLED_INSTRUMENTATIONS
+        value: AspNetCore,HttpClient,GrpcClient,SqlClient
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://10.20.48.98:4317
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp
+      - name: OTEL_DOTNET_AUTO_LOGS_ENABLED_INSTRUMENTATIONS
+        value: AspNetCore
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_DOTNET_AUTO_METRICS_ENABLED_INSTRUMENTATIONS
+        value: AspNetCore,HttpClient
+ 
+ 
+ 
+ 
+  propagators:
+    - tracecontext
+    - baggage
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1.0"

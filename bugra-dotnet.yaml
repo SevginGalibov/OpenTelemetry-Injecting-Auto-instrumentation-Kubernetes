@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bugra1
+  labels:
+    app: bugra1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bugra1
+  template:
+    metadata:
+      labels:
+        app: bugra1
+      annotations:
+        instrumentation.opentelemetry.io/inject-dotnet: "true"
+    spec:
+      containers:
+        - name: bugra1
+          image: ozbugra/dotnet-otel-app:latest
+          ports:
+            - containerPort: 8080
+            - containerPort: 9464
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bugra1-service
+spec:
+  selector:
+    app: bugra1
+  type: NodePort
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: 30102

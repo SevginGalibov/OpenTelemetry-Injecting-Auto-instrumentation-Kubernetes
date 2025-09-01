@@ -23,10 +23,19 @@ spec:
               value: "{{ .Values.otelHeader }}"
             - name: IGNORE_NAMESPACES
               value: "{{ join "," .Values.ignoreNamespaces }}"
-            {{- if .Values.extraEnv }}
-            {{- range .Values.extraEnv }}
-            - name: {{ .name }}
-              value: "{{ .value }}"
-            {{- end }}
-            {{- end }}
+            - name: OTEL_PROPAGATORS
+              value: "{{ .Values.propagators }}"
+            - name: OTEL_TRACES_SAMPLER
+              value: "{{ .Values.sampler.type }}"
+            - name: OTEL_TRACES_SAMPLER_ARG
+              value: "{{ .Values.sampler.argument }}"
 
+            # .NET için extra env (JSON string)
+            - name: DOTNET_EXTRA_ENV
+              value: '{{ .Values.dotnetExtraEnv | toJson }}'
+
+            # Java için extra env (JSON string)
+            - name: JAVA_EXTRA_ENV
+              value: '{{ .Values.javaExtraEnv | toJson }}'
+
+            # Node.js için extra env (JSON stri

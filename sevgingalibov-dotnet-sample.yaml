@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: sevgingalibov-sample-dotnet
-        image: 								# Dotnet docker image
+        image: ozbugra/dotnet-otel-app:latest 								# Dotnet docker image
         ports:
         - containerPort: 8080
